@@ -16,6 +16,7 @@ add_executable(appimagemanager
     src/main.cpp
     src/AppImageManager.cpp
     src/MainWindow.cpp
+    include/AppImageManager/MainWindow.h
 )
 
 target_include_directories(appimagemanager PRIVATE include)
