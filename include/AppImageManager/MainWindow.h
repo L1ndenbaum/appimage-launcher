@@ -21,10 +21,12 @@ private slots:
     void onRemoveSelected();
     void onOpenSelected();
     void onOpenStorageDirectory();
+    void onToggleAutostart();
 
 private:
     void createUi();
     void refreshEntries();
+    void updateActionsForSelection();
 
 private:
     AppImageManager &m_manager;
@@ -33,6 +35,7 @@ private:
     QAction *m_removeAction;
     QAction *m_openAction;
     QAction *m_openStorageAction;
+    QAction *m_autostartAction;
 };
 
 } // namespace appimagelauncher

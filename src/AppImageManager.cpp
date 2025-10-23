@@ -26,6 +26,22 @@ std::filesystem::path defaultBaseDirectory()
     return std::filesystem::path(home) / ".local" / "share" / "appimagemanager";
 }
 
+std::filesystem::path defaultAutostartDirectory()
+{
+    if (const char *xdgConfigHome = std::getenv("XDG_CONFIG_HOME")) {
+        if (*xdgConfigHome != '\0') {
+            return std::filesystem::path(xdgConfigHome) / "autostart";
+        }
+    }
+
+    const char *home = std::getenv("HOME");
+    if (!home || *home == '\0') {
+        throw std::runtime_error("Unable to determine HOME directory for AppImageManager autostart entries");
+    }
+
+    return std::filesystem::path(home) / ".config" / "autostart";
+}
+
 std::string sanitizeId(std::string base)
 {
     for (char &ch : base) {
@@ -65,6 +81,7 @@ AppImageManager::AppImageManager(std::filesystem::path baseDirectory)
     : m_baseDirectory(ensureBaseDirectory(std::move(baseDirectory)))
     , m_storageDirectory(m_baseDirectory / "apps")
     , m_manifestPath(m_baseDirectory / "manifest.tsv")
+    , m_autostartDirectory(ensureAutostartDirectory(defaultAutostartDirectory()))
 {
     ensureStorageDirectory();
     load();
@@ -88,6 +105,7 @@ void AppImageManager::load()
         std::string name;
         std::string storedPath;
         std::string originalPath;
+        std::string autostartFlag;
 
         if (!std::getline(lineStream, id, '\t')) {
             continue;
@@ -101,12 +119,18 @@ void AppImageManager::load()
         if (!std::getline(lineStream, originalPath, '\t')) {
             originalPath.clear();
         }
+        if (!std::getline(lineStream, autostartFlag, '\t')) {
+            autostartFlag.clear();
+        }
+
+        const bool autostart = autostartFlag == "1" || autostartFlag == "true" || autostartFlag == "yes";
 
         AppImageEntry entry{
             id,
             name,
             std::filesystem::path(storedPath),
-            std::filesystem::path(originalPath)
+            std::filesystem::path(originalPath),
+            autostart
         };
         m_entries.emplace(entry.id, std::move(entry));
     }
@@ -124,7 +148,8 @@ void AppImageManager::save() const
         stream << entry.id << '\t'
                << entry.name << '\t'
                << entry.storedPath.string() << '\t'
-               << entry.originalPath.string() << '\n';
+               << entry.originalPath.string() << '\t'
+               << (entry.autostart ? "1" : "0") << '\n';
     }
 }
 
@@ -226,7 +251,8 @@ AppImageEntry AppImageManager::addAppImage(const std::filesystem::path &path, bo
         id,
         storedPath.filename().string(),
         storedPath,
-        moveToStorage ? absolutePath : std::filesystem::path{}
+        moveToStorage ? absolutePath : std::filesystem::path{},
+        false
     };
     m_entries[entry.id] = entry;
     save();
@@ -241,6 +267,7 @@ void AppImageManager::removeAppImage(const std::string &id)
     }
 
     const auto storedPath = it->second.storedPath;
+    removeAutostartEntry(id);
     m_entries.erase(it);
     save();
 
@@ -272,6 +299,14 @@ void AppImageManager::ensureStorageDirectory()
     std::filesystem::create_directories(m_storageDirectory);
 }
 
+std::filesystem::path AppImageManager::ensureAutostartDirectory(std::filesystem::path directory) const
+{
+    if (!directory.empty()) {
+        std::filesystem::create_directories(directory);
+    }
+    return directory;
+}
+
 std::string AppImageManager::generateId(const std::filesystem::path &path) const
 {
     std::string idBase = sanitizeId(splitStem(path));
@@ -281,6 +316,103 @@ std::string AppImageManager::generateId(const std::filesystem::path &path) const
         id = idBase + "-" + std::to_string(suffix++);
     }
     return id;
+}
+
+bool AppImageManager::isAutostartEnabled(const std::string &id) const
+{
+    auto it = m_entries.find(id);
+    if (it == m_entries.end()) {
+        throw std::runtime_error("Unknown AppImage id: " + id);
+    }
+    return it->second.autostart;
+}
+
+void AppImageManager::setAutostart(const std::string &id, bool enabled)
+{
+    auto it = m_entries.find(id);
+    if (it == m_entries.end()) {
+        throw std::runtime_error("Unknown AppImage id: " + id);
+    }
+
+    if (it->second.autostart == enabled) {
+        return;
+    }
+
+    const bool previous = it->second.autostart;
+    it->second.autostart = enabled;
+    try {
+        if (enabled) {
+            writeAutostartEntry(it->second);
+        } else {
+            removeAutostartEntry(id);
+        }
+        save();
+    } catch (...) {
+        it->second.autostart = previous;
+        throw;
+    }
+}
+
+std::filesystem::path AppImageManager::autostartDirectory() const noexcept
+{
+    return m_autostartDirectory;
+}
+
+std::filesystem::path AppImageManager::autostartDesktopPath(const std::string &id) const
+{
+    return m_autostartDirectory / ("appimagemanager-" + id + ".desktop");
+}
+
+void AppImageManager::writeAutostartEntry(const AppImageEntry &entry) const
+{
+    if (m_autostartDirectory.empty()) {
+        return;
+    }
+
+    std::filesystem::create_directories(m_autostartDirectory);
+    const auto desktopPath = autostartDesktopPath(entry.id);
+    std::ofstream stream(desktopPath, std::ios::trunc);
+    if (!stream.is_open()) {
+        throw std::runtime_error("Unable to write autostart entry: " + desktopPath.string());
+    }
+
+    const std::string execPath = entry.storedPath.string();
+    std::string escapedExec;
+    escapedExec.reserve(execPath.size());
+    for (char ch : execPath) {
+        if (ch == '"') {
+            escapedExec += "\\\"";
+        } else {
+            escapedExec += ch;
+        }
+    }
+
+    stream << "[Desktop Entry]\n"
+           << "Type=Application\n"
+           << "Name=" << entry.name << "\n"
+           << "Exec=\"" << escapedExec << "\"\n"
+           << "Terminal=false\n"
+           << "X-AppImage-Id=" << entry.id << "\n";
+    if (!entry.originalPath.empty()) {
+        stream << "X-AppImage-Original-Path=" << entry.originalPath.string() << "\n";
+    }
+    stream << "X-GNOME-Autostart-enabled=true\n";
+}
+
+void AppImageManager::removeAutostartEntry(const std::string &id) const
+{
+    if (m_autostartDirectory.empty()) {
+        return;
+    }
+
+    const auto desktopPath = autostartDesktopPath(id);
+    try {
+        if (std::filesystem::exists(desktopPath)) {
+            std::filesystem::remove(desktopPath);
+        }
+    } catch (const std::filesystem::filesystem_error &) {
+        // Ignore failures when removing autostart entries.
+    }
 }
 
 } // namespace appimagelauncher

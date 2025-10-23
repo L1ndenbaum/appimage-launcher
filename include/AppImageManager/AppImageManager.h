@@ -13,6 +13,7 @@ struct AppImageEntry {
     std::string name;
     std::filesystem::path storedPath;
     std::filesystem::path originalPath;
+    bool autostart = false;
 };
 
 class AppImageManager {
@@ -35,17 +36,27 @@ public:
     AppImageEntry addAppImage(const std::filesystem::path &path, bool moveToStorage = true);
     void removeAppImage(const std::string &id);
 
+    bool isAutostartEnabled(const std::string &id) const;
+    void setAutostart(const std::string &id, bool enabled);
+
+    std::filesystem::path autostartDirectory() const noexcept;
+
     std::filesystem::path manifestPath() const;
 
 private:
     std::filesystem::path ensureBaseDirectory(std::filesystem::path baseDirectory);
     void ensureStorageDirectory();
+    std::filesystem::path ensureAutostartDirectory(std::filesystem::path directory) const;
     std::string generateId(const std::filesystem::path &path) const;
+    std::filesystem::path autostartDesktopPath(const std::string &id) const;
+    void writeAutostartEntry(const AppImageEntry &entry) const;
+    void removeAutostartEntry(const std::string &id) const;
 
 private:
     std::filesystem::path m_baseDirectory;
     std::filesystem::path m_storageDirectory;
     std::filesystem::path m_manifestPath;
+    std::filesystem::path m_autostartDirectory;
     std::map<std::string, AppImageEntry> m_entries;
 };
 

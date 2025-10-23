@@ -9,6 +9,7 @@ A Qt-based desktop and command-line application for managing AppImage packages o
 - Moves managed AppImages to an exclusive storage directory under `~/.local/share/appimagemanager/apps` by default.
 - Persistent manifest tracking metadata for each AppImage.
 - Command-line operations for automation and scripting.
+- Optional per-application autostart entries for launching critical AppImages when the user logs in.
 
 ## Building
 
@@ -27,6 +28,7 @@ appimagemanager                # Launch the graphical interface
 appimagemanager add <path>     # Add an AppImage and move it under management
 appimagemanager remove <id>    # Remove a managed AppImage
 appimagemanager list           # List all managed AppImages
+appimagemanager autostart <id> <on|off>  # Enable or disable login autostart for an AppImage
 appimagemanager open <target>  # Open AppImage by id or path (prompts when new)
 appimagemanager storage-dir    # Print the dedicated storage directory
 appimagemanager manifest       # Print the manifest file path

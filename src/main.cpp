@@ -26,6 +26,7 @@ void printUsage()
               << "  appimagemanager add <path>     # Add an AppImage and move it under management\n"
               << "  appimagemanager remove <id>    # Remove a managed AppImage\n"
               << "  appimagemanager list           # List all managed AppImages\n"
+              << "  appimagemanager autostart <id> <on|off>  # Enable or disable autostart for an AppImage\n"
               << "  appimagemanager open <target>  # Open AppImage by id or path (prompts when new)\n"
               << "  appimagemanager storage-dir    # Print the dedicated storage directory\n"
               << "  appimagemanager manifest       # Print the manifest file path\n";
@@ -68,8 +69,31 @@ int handleCliCommand(int argc, char *argv[])
         if (command == "list") {
             const auto entries = manager.entries();
             for (const auto &entry : entries) {
-                std::cout << entry.id << "\t" << entry.name << "\t" << entry.storedPath << std::endl;
+                std::cout << entry.id << "\t" << entry.name << "\t" << entry.storedPath
+                          << "\t" << (entry.autostart ? "autostart" : "") << std::endl;
             }
+            return 0;
+        }
+
+        if (command == "autostart") {
+            if (argc < 4) {
+                std::cerr << "Usage: appimagemanager autostart <id> <on|off>" << std::endl;
+                return 1;
+            }
+            const std::string id = argv[2];
+            const std::string state = argv[3];
+            bool enable;
+            if (state == "on" || state == "enable" || state == "true") {
+                enable = true;
+            } else if (state == "off" || state == "disable" || state == "false") {
+                enable = false;
+            } else {
+                std::cerr << "Unknown autostart state: " << state << std::endl;
+                return 1;
+            }
+
+            manager.setAutostart(id, enable);
+            std::cout << (enable ? "Enabled" : "Disabled") << " autostart for " << id << std::endl;
             return 0;
         }
 
