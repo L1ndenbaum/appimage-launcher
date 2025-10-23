@@ -1,0 +1,146 @@
+#include "AppImageManager/MainWindow.h"
+
+#include <QAction>
+#include <QAbstractItemView>
+#include <QDesktopServices>
+#include <QFileDialog>
+#include <QListWidget>
+#include <QListWidgetItem>
+#include <QMessageBox>
+#include <QProcess>
+#include <QToolBar>
+#include <QUrl>
+
+#include <filesystem>
+#include <stdexcept>
+
+namespace appimagelauncher {
+
+MainWindow::MainWindow(AppImageManager &manager, QWidget *parent)
+    : QMainWindow(parent)
+    , m_manager(manager)
+    , m_listWidget(nullptr)
+    , m_addAction(nullptr)
+    , m_removeAction(nullptr)
+    , m_openAction(nullptr)
+    , m_openStorageAction(nullptr)
+{
+    createUi();
+    refreshEntries();
+    setWindowTitle(tr("AppImage Manager"));
+}
+
+void MainWindow::createUi()
+{
+    m_listWidget = new QListWidget(this);
+    m_listWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+    setCentralWidget(m_listWidget);
+
+    auto *toolBar = addToolBar(tr("Actions"));
+
+    m_addAction = toolBar->addAction(tr("Add"));
+    connect(m_addAction, &QAction::triggered, this, &MainWindow::onAddAppImage);
+
+    m_openAction = toolBar->addAction(tr("Open"));
+    connect(m_openAction, &QAction::triggered, this, &MainWindow::onOpenSelected);
+
+    m_removeAction = toolBar->addAction(tr("Remove"));
+    connect(m_removeAction, &QAction::triggered, this, &MainWindow::onRemoveSelected);
+
+    m_openStorageAction = toolBar->addAction(tr("Open Storage"));
+    connect(m_openStorageAction, &QAction::triggered, this, &MainWindow::onOpenStorageDirectory);
+
+    connect(m_listWidget, &QListWidget::itemDoubleClicked, this, [this](QListWidgetItem *) { onOpenSelected(); });
+    connect(m_listWidget, &QListWidget::itemSelectionChanged, this, [this]() {
+        const bool hasSelection = !m_listWidget->selectedItems().isEmpty();
+        m_removeAction->setEnabled(hasSelection);
+        m_openAction->setEnabled(hasSelection);
+    });
+
+    m_removeAction->setEnabled(false);
+    m_openAction->setEnabled(false);
+}
+
+void MainWindow::refreshEntries()
+{
+    const auto currentSelection = m_listWidget->currentItem() ? m_listWidget->currentItem()->data(Qt::UserRole).toString() : QString();
+
+    m_listWidget->clear();
+    const auto entries = m_manager.entries();
+    for (const auto &entry : entries) {
+        auto *item = new QListWidgetItem(QString::fromStdString(entry.name));
+        item->setData(Qt::UserRole, QString::fromStdString(entry.id));
+        item->setToolTip(QString::fromStdString(entry.storedPath.string()));
+        m_listWidget->addItem(item);
+
+        if (!currentSelection.isEmpty() && currentSelection == item->data(Qt::UserRole).toString()) {
+            m_listWidget->setCurrentItem(item);
+        }
+    }
+}
+
+void MainWindow::onAddAppImage()
+{
+    const QString filePath = QFileDialog::getOpenFileName(this, tr("Select AppImage"), QString(), tr("AppImage Files (*.AppImage);;All Files (*)"));
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    try {
+        m_manager.addAppImage(std::filesystem::u8path(filePath.toUtf8().constData()));
+        refreshEntries();
+    } catch (const std::exception &error) {
+        QMessageBox::critical(this, tr("Unable to add AppImage"), QString::fromUtf8(error.what()));
+    }
+}
+
+void MainWindow::onRemoveSelected()
+{
+    const auto selectedItems = m_listWidget->selectedItems();
+    if (selectedItems.isEmpty()) {
+        return;
+    }
+
+    const auto *item = selectedItems.front();
+    const QString id = item->data(Qt::UserRole).toString();
+
+    if (QMessageBox::question(this, tr("Remove AppImage"), tr("Do you really want to remove the selected AppImage?")) != QMessageBox::Yes) {
+        return;
+    }
+
+    try {
+        m_manager.removeAppImage(id.toStdString());
+        refreshEntries();
+    } catch (const std::exception &error) {
+        QMessageBox::critical(this, tr("Unable to remove"), QString::fromUtf8(error.what()));
+    }
+}
+
+void MainWindow::onOpenSelected()
+{
+    const auto selectedItems = m_listWidget->selectedItems();
+    if (selectedItems.isEmpty()) {
+        return;
+    }
+
+    const auto *item = selectedItems.front();
+    const QString id = item->data(Qt::UserRole).toString();
+    const auto entry = m_manager.entryById(id.toStdString());
+    if (!entry.has_value()) {
+        QMessageBox::warning(this, tr("Launch failed"), tr("Unable to locate the stored AppImage."));
+        return;
+    }
+
+    const QString executable = QString::fromStdString(entry->storedPath.string());
+    if (!QProcess::startDetached(executable, {})) {
+        QMessageBox::warning(this, tr("Launch failed"), tr("Unable to start the AppImage."));
+    }
+}
+
+void MainWindow::onOpenStorageDirectory()
+{
+    const auto url = QUrl::fromLocalFile(QString::fromStdString(m_manager.storageDirectory().string()));
+    QDesktopServices::openUrl(url);
+}
+
+} // namespace appimagelauncher
