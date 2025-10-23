@@ -23,6 +23,7 @@ add_executable(appimagemanager
     include/AppImageManager/Preferences.h
     include/AppImageManager/SettingsDialog.h
     include/AppImageManager/TranslationManager.h
+    resources/assets.qrc
     resources/translations.qrc
 )
 
@@ -35,3 +36,5 @@ include(GNUInstallDirs)
 install(TARGETS appimagemanager RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(FILES resources/appimagemanager.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+install(FILES resources/icons/appimagemanager.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/1024x1024/apps)
+install(FILES resources/icons/appimagemanager.png DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps)
