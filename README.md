@@ -1,5 +1,7 @@
 # AppImage Manager
 
+[阅读中文版 README](docs/README.zh_CN.md)
+
 A Qt-based desktop and command-line application for managing AppImage packages on Linux systems. The manager provides a modern graphical interface along with a set of CLI tools for registering, launching, and removing AppImages from a dedicated storage directory.
 
 ## Features
@@ -17,6 +19,19 @@ A Qt-based desktop and command-line application for managing AppImage packages o
 ## Localization
 
 Translations live in JSON catalogs under `resources/i18n`. Additions or edits only require updating the corresponding JSON file and rebuilding so Qt can embed the updated resources.
+
+## Install Dependencies
+
+This project depends on Qt Widgets (Qt 5 or Qt 6). Ensure the development headers and tools are available before configuring CMake.
+
+```bash
+# Ubuntu / Debian (Qt 5 example)
+sudo apt update
+sudo apt install qtbase5-dev qttools5-dev-tools
+
+# Arch Linux (Qt 6 example)
+sudo pacman -S qt6-base
+```
 
 ## Building
 
