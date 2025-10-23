@@ -14,6 +14,10 @@ A Qt-based desktop and command-line application for managing AppImage packages o
 - Automatically generates avatars when AppImages do not ship icons.
 - Installs a `.desktop` launcher so the manager is discoverable via desktop launchers such as Rofi or GNOME Shell.
 
+## Localization
+
+Translations live in JSON catalogs under `resources/i18n`. Additions or edits only require updating the corresponding JSON file and rebuilding so Qt can embed the updated resources.
+
 ## Building
 
 ```bash

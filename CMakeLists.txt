@@ -23,6 +23,7 @@ add_executable(appimagemanager
     include/AppImageManager/Preferences.h
     include/AppImageManager/SettingsDialog.h
     include/AppImageManager/TranslationManager.h
+    resources/translations.qrc
 )
 
 target_include_directories(appimagemanager PRIVATE include)
