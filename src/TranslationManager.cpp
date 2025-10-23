@@ -1,15 +1,17 @@
 #include "AppImageManager/TranslationManager.h"
 
 #include <QApplication>
+#include <QDebug>
 #include <QFile>
 #include <QHash>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLocale>
 #include <QString>
+#include <QStringList>
 #include <QTranslator>
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 namespace {
 
@@ -63,6 +65,11 @@ public:
         return QString();
     }
 
+    bool isEmpty() const override
+    {
+        return m_catalog.isEmpty();
+    }
+
 private:
     static QString makeKey(const QString &context, const QString &source)
     {
@@ -75,13 +82,41 @@ private:
 
 std::unique_ptr<QTranslator> createChineseSimplifiedTranslator()
 {
-    QFile file(QStringLiteral(":/i18n/zh_CN.json"));
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    static const QStringList kCandidates = {
+        QStringLiteral(":/i18n/zh_CN.json"),
+        QStringLiteral(":/i18n/i18n/zh_CN.json"),
+        QStringLiteral(":/zh_CN.json")
+    };
+
+    QByteArray bytes;
+    QString sourcePath;
+    for (const QString &candidate : kCandidates) {
+        QFile file(candidate);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            continue;
+        }
+        const QByteArray data = file.readAll();
+        if (data.isEmpty()) {
+            continue;
+        }
+        bytes = data;
+        sourcePath = candidate;
+        break;
+    }
+
+    if (bytes.isEmpty()) {
+        qWarning() << "[translator] unable to locate zh_CN.json in resources";
         return nullptr;
     }
 
     auto translator = std::make_unique<JsonTranslator>();
-    if (!translator->loadFromJson(file.readAll())) {
+    if (!translator->loadFromJson(bytes)) {
+        qWarning() << "[translator] failed to parse translation file at" << sourcePath;
+        return nullptr;
+    }
+
+    if (translator->isEmpty()) {
+        qWarning() << "[translator] translation catalog is empty after loading" << sourcePath;
         return nullptr;
     }
 
@@ -100,23 +135,30 @@ bool TranslationManager::applyLanguage(LanguageOption language)
 {
     m_selectedLanguage = language;
     const LanguageOption effective = resolveEffectiveLanguage(language);
-    if (effective == m_activeLanguage) {
-        return false;
-    }
 
     if (m_translator) {
         qApp->removeTranslator(m_translator.get());
         m_translator.reset();
     }
 
-    auto translator = createTranslator(effective);
-    if (translator) {
+    LanguageOption nextLanguage = effective;
+    std::unique_ptr<QTranslator> translator;
+    if (effective != LanguageOption::English) {
+        translator = createTranslator(effective);
+        if (!translator) {
+            qWarning() << "[translator] falling back to English because the requested language could not be loaded";
+            nextLanguage = LanguageOption::English;
+        }
+    }
+
+    if (nextLanguage != LanguageOption::English && translator) {
         qApp->installTranslator(translator.get());
         m_translator = std::move(translator);
     }
 
-    m_activeLanguage = effective;
-    return true;
+    const bool changed = (nextLanguage != m_activeLanguage);
+    m_activeLanguage = nextLanguage;
+    return changed;
 }
 
 LanguageOption TranslationManager::resolveEffectiveLanguage(LanguageOption language) const
@@ -141,4 +183,4 @@ std::unique_ptr<QTranslator> TranslationManager::createTranslator(LanguageOption
     return nullptr;
 }
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

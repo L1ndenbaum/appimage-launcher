@@ -2,7 +2,7 @@
 
 #include <QSettings>
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 namespace {
 
@@ -69,4 +69,4 @@ void Preferences::save() const
     settings.sync();
 }
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

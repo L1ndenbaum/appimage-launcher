@@ -1,0 +1,10 @@
+[Unit]
+Description=AppImage Manager Daemon
+After=graphical-session.target
+
+[Service]
+ExecStart=@CMAKE_INSTALL_FULL_BINDIR@/appimagemanager-daemon
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

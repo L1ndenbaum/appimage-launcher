@@ -12,7 +12,7 @@ class QDialogButtonBox;
 class QGroupBox;
 QT_END_NAMESPACE
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 class SettingsDialog : public QDialog {
     Q_OBJECT
@@ -42,4 +42,4 @@ private:
     QGroupBox *m_languageGroup;
 };
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

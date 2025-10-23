@@ -5,7 +5,7 @@
 #include <QTranslator>
 #include <memory>
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 class TranslationManager {
 public:
@@ -26,4 +26,4 @@ private:
     std::unique_ptr<QTranslator> m_translator;
 };
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

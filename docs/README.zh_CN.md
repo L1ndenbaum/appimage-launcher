@@ -15,10 +15,21 @@ AppImage 管理器是一个基于 Qt 的桌面与命令行应用，用于在 Lin
 - 附带命令行工具，便于自动化或脚本集成。
 - 当 AppImage 未提供图标时，会自动生成首字母头像。
 - 安装后会放置 `.desktop` 启动器，可直接被 Rofi、GNOME Shell 等启动器检索。
+- 可选的守护进程服务，可在登录时自动启动已标记为自启动的 AppImage。
 
 ## 本地化
 
 所有翻译都存放在 `resources/i18n` 下的 JSON 文件中。要新增或修改翻译，仅需更新对应的 JSON 文件并重新构建项目，Qt 会自动嵌入最新的资源。
+
+## 守护进程
+
+构建过程会安装一个名为 `appimagemanager-daemon.service` 的用户级 systemd 单元。启用它即可在登录时自动运行所有设置为自启动的 AppImage：
+
+```bash
+systemctl --user enable appimagemanager-daemon.service
+```
+
+如需停用，可执行 `systemctl --user disable appimagemanager-daemon.service`。
 
 ## 安装依赖
 

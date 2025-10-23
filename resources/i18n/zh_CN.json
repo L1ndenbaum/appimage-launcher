@@ -1,5 +1,5 @@
 {
-  "appimagelauncher::MainWindow": {
+  "appimagemanager::MainWindow": {
     "AppImage Manager": "AppImage 管理器",
     "Actions": "操作",
     "File": "文件",
@@ -50,7 +50,7 @@
     "Unable to start the AppImage.": "无法启动该 AppImage。",
     "Launch failed": "启动失败"
   },
-  "appimagelauncher::SettingsDialog": {
+  "appimagemanager::SettingsDialog": {
     "Preferences": "首选项",
     "General": "常规",
     "Move AppImages into managed storage": "将 AppImage 移动到托管存储",

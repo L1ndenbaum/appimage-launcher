@@ -8,7 +8,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 namespace {
 std::filesystem::path defaultBaseDirectory()
@@ -462,4 +462,4 @@ void AppImageManager::removeAutostartEntry(const std::string &id) const
     }
 }
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

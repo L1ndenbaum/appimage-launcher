@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 struct AppImageEntry {
     std::string id;
@@ -61,4 +61,4 @@ private:
     std::map<std::string, AppImageEntry> m_entries;
 };
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

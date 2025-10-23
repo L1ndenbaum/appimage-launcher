@@ -15,10 +15,21 @@ A Qt-based desktop and command-line application for managing AppImage packages o
 - Command-line operations for automation and scripting.
 - Automatically generates avatars when AppImages do not ship icons.
 - Installs a `.desktop` launcher so the manager is discoverable via desktop launchers such as Rofi or GNOME Shell.
+- Optional background daemon service that launches AppImages marked for autostart during login.
 
 ## Localization
 
 Translations live in JSON catalogs under `resources/i18n`. Additions or edits only require updating the corresponding JSON file and rebuilding so Qt can embed the updated resources.
+
+## Daemon Service
+
+The build installs a user-level systemd unit named `appimagemanager-daemon.service`. Enable it to make sure AppImages flagged for autostart launch automatically when you log in:
+
+```bash
+systemctl --user enable appimagemanager-daemon.service
+```
+
+You can stop it at any time with `systemctl --user disable appimagemanager-daemon.service`.
 
 ## Install Dependencies
 

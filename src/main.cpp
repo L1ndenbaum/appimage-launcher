@@ -15,11 +15,11 @@
 #include <string>
 #include <vector>
 
-using appimagelauncher::AppImageEntry;
-using appimagelauncher::AppImageManager;
-using appimagelauncher::MainWindow;
-using appimagelauncher::Preferences;
-using appimagelauncher::TranslationManager;
+using appimagemanager::AppImageEntry;
+using appimagemanager::AppImageManager;
+using appimagemanager::MainWindow;
+using appimagemanager::Preferences;
+using appimagemanager::TranslationManager;
 
 namespace {
 

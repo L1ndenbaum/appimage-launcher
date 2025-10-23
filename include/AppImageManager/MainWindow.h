@@ -15,7 +15,7 @@ class QToolBar;
 class QActionGroup;
 QT_END_NAMESPACE
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -74,4 +74,4 @@ private:
     QActionGroup *m_viewActions;
 };
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

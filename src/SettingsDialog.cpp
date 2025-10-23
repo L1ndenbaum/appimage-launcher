@@ -9,7 +9,7 @@
 #include <QRadioButton>
 #include <QVBoxLayout>
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 SettingsDialog::SettingsDialog(const Preferences &preferences, QWidget *parent)
     : QDialog(parent)
@@ -152,4 +152,4 @@ void SettingsDialog::retranslateUi()
     }
 }
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

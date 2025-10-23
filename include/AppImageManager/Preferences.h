@@ -2,7 +2,7 @@
 
 #include <QtGlobal>
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 enum class ViewMode {
     List,
@@ -25,4 +25,4 @@ struct Preferences {
     void save() const;
 };
 
-} // namespace appimagelauncher
+} // namespace appimagemanager

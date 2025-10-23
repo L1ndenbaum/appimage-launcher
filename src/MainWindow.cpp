@@ -36,7 +36,7 @@
 #include <string>
 #include <utility>
 
-namespace appimagelauncher {
+namespace appimagemanager {
 
 namespace {
 constexpr int kIdRole = Qt::UserRole;
@@ -639,4 +639,4 @@ void MainWindow::onContextMenuRequested(const QPoint &position)
     menu.exec(m_listWidget->viewport()->mapToGlobal(position));
 }
 
-} // namespace appimagelauncher
+} // namespace appimagemanager
