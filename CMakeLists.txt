@@ -16,12 +16,21 @@ add_executable(appimagemanager
     src/main.cpp
     src/AppImageManager.cpp
     src/MainWindow.cpp
+    src/Preferences.cpp
+    src/SettingsDialog.cpp
+    src/TranslationManager.cpp
     include/AppImageManager/MainWindow.h
+    include/AppImageManager/Preferences.h
+    include/AppImageManager/SettingsDialog.h
+    include/AppImageManager/TranslationManager.h
 )
 
 target_include_directories(appimagemanager PRIVATE include)
 
 target_link_libraries(appimagemanager PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_compile_definitions(appimagemanager PRIVATE APPIMAGEMANAGER_VERSION="${PROJECT_VERSION}")
 
 include(GNUInstallDirs)
 install(TARGETS appimagemanager RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(FILES resources/appimagemanager.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)

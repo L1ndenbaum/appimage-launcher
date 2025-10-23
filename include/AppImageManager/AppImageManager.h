@@ -35,6 +35,7 @@ public:
 
     AppImageEntry addAppImage(const std::filesystem::path &path, bool moveToStorage = true);
     void removeAppImage(const std::string &id);
+    void renameAppImage(const std::string &id, const std::string &displayName);
 
     bool isAutostartEnabled(const std::string &id) const;
     void setAutostart(const std::string &id, bool enabled);

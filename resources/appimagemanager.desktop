@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=AppImage Manager
+Name[zh_CN]=AppImage 管理器
+GenericName=AppImage Manager
+Comment=Manage, launch, and organize AppImage packages
+Comment[zh_CN]=管理并启动 AppImage 应用
+Exec=appimagemanager
+TryExec=appimagemanager
+Icon=appimagemanager
+Terminal=false
+Categories=Utility;
+StartupNotify=true
+Keywords=AppImage;Launcher;Manager;

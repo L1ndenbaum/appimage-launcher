@@ -1,5 +1,6 @@
 #include "AppImageManager/AppImageManager.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
@@ -68,6 +69,18 @@ std::string splitStem(const std::filesystem::path &path)
         stem = path.filename().string();
     }
     return stem;
+}
+
+std::string trim(std::string value)
+{
+    auto isSpace = [](unsigned char ch) { return std::isspace(ch); };
+    value.erase(value.begin(),
+        std::find_if(value.begin(), value.end(), [&](char ch) { return !isSpace(static_cast<unsigned char>(ch)); }));
+    value.erase(
+        std::find_if(value.rbegin(), value.rend(), [&](char ch) { return !isSpace(static_cast<unsigned char>(ch)); })
+            .base(),
+        value.end());
+    return value;
 }
 
 } // namespace
@@ -247,9 +260,14 @@ AppImageEntry AppImageManager::addAppImage(const std::filesystem::path &path, bo
 
     std::string id = generateId(storedPath);
 
+    std::string displayName = trim(splitStem(storedPath));
+    if (displayName.empty()) {
+        displayName = storedPath.filename().string();
+    }
+
     AppImageEntry entry{
         id,
-        storedPath.filename().string(),
+        displayName,
         storedPath,
         moveToStorage ? absolutePath : std::filesystem::path{},
         false
@@ -277,6 +295,35 @@ void AppImageManager::removeAppImage(const std::string &id)
         }
     } catch (const std::filesystem::filesystem_error &) {
         // Ignore removal errors.
+    }
+}
+
+void AppImageManager::renameAppImage(const std::string &id, const std::string &displayName)
+{
+    auto it = m_entries.find(id);
+    if (it == m_entries.end()) {
+        throw std::runtime_error("Unknown AppImage id: " + id);
+    }
+
+    const std::string trimmedName = trim(displayName);
+    if (trimmedName.empty()) {
+        throw std::runtime_error("Display name must not be empty");
+    }
+
+    if (it->second.name == trimmedName) {
+        return;
+    }
+
+    const std::string previousName = it->second.name;
+    it->second.name = trimmedName;
+    try {
+        if (it->second.autostart) {
+            writeAutostartEntry(it->second);
+        }
+        save();
+    } catch (...) {
+        it->second.name = previousName;
+        throw;
     }
 }
 

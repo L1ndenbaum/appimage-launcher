@@ -1,11 +1,14 @@
 #include "AppImageManager/AppImageManager.h"
 #include "AppImageManager/MainWindow.h"
+#include "AppImageManager/Preferences.h"
+#include "AppImageManager/TranslationManager.h"
 
 #include <QApplication>
 #include <QCoreApplication>
 #include <QMessageBox>
 #include <QObject>
 #include <QProcess>
+#include <QString>
 
 #include <filesystem>
 #include <iostream>
@@ -15,8 +18,22 @@
 using appimagelauncher::AppImageEntry;
 using appimagelauncher::AppImageManager;
 using appimagelauncher::MainWindow;
+using appimagelauncher::Preferences;
+using appimagelauncher::TranslationManager;
 
 namespace {
+
+void configureApplicationMetadata()
+{
+    QCoreApplication::setOrganizationName(QStringLiteral("AppImageManager"));
+    QCoreApplication::setOrganizationDomain(QStringLiteral("appimagemanager.local"));
+    QCoreApplication::setApplicationName(QStringLiteral("AppImage Manager"));
+#ifdef APPIMAGEMANAGER_VERSION
+    QCoreApplication::setApplicationVersion(QStringLiteral(APPIMAGEMANAGER_VERSION));
+#else
+    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+#endif
+}
 
 void printUsage()
 {
@@ -34,6 +51,7 @@ void printUsage()
 
 int handleCliCommand(int argc, char *argv[])
 {
+    configureApplicationMetadata();
     QCoreApplication app(argc, argv);
 
     if (argc < 2) {
@@ -128,7 +146,12 @@ int handleCliCommand(int argc, char *argv[])
 
 int handleOpenCommand(int argc, char *argv[])
 {
+    configureApplicationMetadata();
     QApplication app(argc, argv);
+    Preferences preferences = Preferences::load();
+    TranslationManager translator;
+    translator.applyLanguage(preferences.language);
+
     if (argc < 3) {
         std::cerr << "Missing AppImage identifier or path" << std::endl;
         return 1;
@@ -189,9 +212,14 @@ int handleOpenCommand(int argc, char *argv[])
 
 int runGui(int argc, char *argv[])
 {
+    configureApplicationMetadata();
     QApplication app(argc, argv);
+    Preferences preferences = Preferences::load();
+    TranslationManager translator;
+    translator.applyLanguage(preferences.language);
+
     AppImageManager manager;
-    MainWindow window(manager);
+    MainWindow window(manager, translator, preferences);
     window.show();
     return app.exec();
 }

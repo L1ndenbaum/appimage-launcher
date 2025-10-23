@@ -4,12 +4,15 @@ A Qt-based desktop and command-line application for managing AppImage packages o
 
 ## Features
 
-- Modern Qt Widgets interface for browsing and launching managed AppImages.
+- Modern Qt Widgets interface with list and grid layouts for browsing managed AppImages.
 - Automatic prompt to register AppImages the first time they are opened through the manager.
 - Moves managed AppImages to an exclusive storage directory under `~/.local/share/appimagemanager/apps` by default.
+- Supports friendly renaming, per-application autostart, and quick launch directly from the grid or list.
+- Preferences dialog for toggling storage behaviour, removal confirmations, layout, and language (English or Simplified Chinese).
 - Persistent manifest tracking metadata for each AppImage.
 - Command-line operations for automation and scripting.
-- Optional per-application autostart entries for launching critical AppImages when the user logs in.
+- Automatically generates avatars when AppImages do not ship icons.
+- Installs a `.desktop` launcher so the manager is discoverable via desktop launchers such as Rofi or GNOME Shell.
 
 ## Building
 
